@@ -4,11 +4,10 @@ from pathlib import Path
 import socket
 
 HOST = "127.0.0.1"
-PORT = 27000
+PORT = 49152
 
 
-def start_server(file, port: int, host: str = ''):
-
+def start_server(file_data: str, port: int, host: str = ''):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((host, port))
         s.listen()
@@ -20,17 +19,16 @@ def start_server(file, port: int, host: str = ''):
         conn, addr = s.accept()
         # The with statement ensures the socket will be closed
         with conn:
-            print('Connected by', addr)
-            while True:
-                # recv() is a blocking call
-                # Blocking calls have to wait on system calls (I/O) to \
-                # complete before they can return a value.
-                data = conn.recv(1024)
-                print(f"Received data: {data}")
-                if not data:
-                    break
-                conn.sendall(data)
-    return 0
+            #     print('Connected by', addr)
+            #     while True:
+            #         # recv() is a blocking call
+            #         # Blocking calls have to wait on system calls (I/O) to \
+            #         # complete before they can return a value.
+            #         data = conn.recv(1024)
+            #         print(f"Received data: {data}")
+            #         if not data:
+            #             break
+            conn.sendall(file_data.encode())
 
 
 arguments = sys.argv[1:]
@@ -38,30 +36,17 @@ arguments = sys.argv[1:]
 if len(arguments) == 1:
     print("Number of arguments is 1 [OK]")
     file_name = arguments[0]
+    file_path = Path.cwd() / 'input_file' / file_name
 else:
-    # throws an error and exit the script
     print(f"ERR: 1 argument expected, but {len(arguments)} given!")
     exit(0)
 
-# if re.match(r'^[^/]+$', file_name):
-#     print(f"Valid: {file_name}!")
-# else:
-#     print(f"File {file_name} invalid!")
-#     exit(0)
-
-file_path = Path.cwd() / 'input_file' / file_name
-
 try:
     print(f"Checking for the existence of file {file_name} ...")
-    file = open(file_path, "r")
-    print(f"File {file_name} exists [OK]")
-    start_server(file, PORT, HOST)
-    file.close()
+    with open(file_path, "r") as input_file:
+        print(f"File {file_name} exists [OK]")
+        data = input_file.read()
+    start_server(data, PORT, HOST)
 except FileNotFoundError:
     print(f"ERR: File {file_name} does not exist!")
     exit(0)
-
-
-
-
-
